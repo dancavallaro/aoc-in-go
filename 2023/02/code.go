@@ -8,7 +8,7 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/02/input-user.txt", false)
+	util.Run(run, "2023/02/input-user.txt", true)
 }
 
 func parseCubeSet(s string) cubeSet {
@@ -63,25 +63,25 @@ func parseGame(line string) game {
 // the return value of each run is printed to stdout
 func run(part2 bool, input string) any {
 	// when you're ready to do part 2, remove this "not implemented" block
-	if part2 {
+	if !part2 {
 		return "not implemented"
 	}
 
-	cubeBag := cubeSet{12, 13, 14}
-	sumOfMatchingIds := 0
+	powerSum := 0
 
-outerLoop:
 	for _, line := range util.Lines(input) {
 		game := parseGame(line)
+		minRed, minGreen, minBlue := 0, 0, 0
 		for _, cubes := range game.cubes {
-			if !cubeBag.contains(cubes) {
-				continue outerLoop
-			}
+			minRed = max(minRed, cubes.red)
+			minGreen = max(minGreen, cubes.green)
+			minBlue = max(minBlue, cubes.blue)
 		}
-		sumOfMatchingIds += game.id
+		power := minRed * minGreen * minBlue
+		powerSum += power
 	}
 
-	return sumOfMatchingIds
+	return powerSum
 }
 
 type cubeSet struct {
