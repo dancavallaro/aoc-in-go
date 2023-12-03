@@ -8,7 +8,7 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/03/input-user.txt", false)
+	util.Run(run, "2023/03/input-user.txt", true)
 }
 
 type symbol rune
@@ -44,8 +44,7 @@ func parseLine(line string) []any {
 }
 
 func run(part2 bool, input string) any {
-	// when you're ready to do part 2, remove this "not implemented" block
-	if part2 {
+	if !part2 {
 		return "not implemented"
 	}
 
@@ -54,23 +53,27 @@ func run(part2 bool, input string) any {
 		lines = append(lines, parseLine(line))
 	}
 
-	partNumSum := 0
-	foundPartNums := make(map[*number]bool)
+	gearRatioSum := 0
 	for i := 0; i < len(lines); i++ {
 		for j := 0; j < len(lines[0]); j++ {
 			switch lines[i][j].(type) {
 			case symbol:
-				sumNearbyPartNums := sumPartNumsNear(lines, foundPartNums, i, j)
-				partNumSum += sumNearbyPartNums
+				if lines[i][j] == symbol('*') {
+					nearbyPartNums := findPartNumsNear(lines, i, j)
+					if len(nearbyPartNums) == 2 {
+						gearRatioSum += int(nearbyPartNums[0]) * int(nearbyPartNums[1])
+					}
+				}
 			}
 		}
 	}
 
-	return partNumSum
+	return gearRatioSum
 }
 
-func sumPartNumsNear(lines [][]any, foundPartNums map[*number]bool, i int, j int) int {
-	partNumSum := 0
+func findPartNumsNear(lines [][]any, i int, j int) []number {
+	partNums := make([]number, 0)
+	foundPartNums := make(map[*number]bool)
 	adjacencies := [...][2]int{
 		{1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, -1}, {1, -1},
 	}
@@ -84,12 +87,12 @@ func sumPartNumsNear(lines [][]any, foundPartNums map[*number]bool, i int, j int
 			case *number:
 				num := lines[newI][newJ].(*number)
 				if !foundPartNums[num] {
+					partNums = append(partNums, *num)
 					foundPartNums[num] = true
-					partNumSum += int(*num)
 				}
 			}
 		}
 	}
 
-	return partNumSum
+	return partNums
 }
