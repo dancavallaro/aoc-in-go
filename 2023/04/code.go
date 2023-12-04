@@ -2,14 +2,13 @@ package main
 
 import (
 	"aoc-in-go/pkg/util"
-	"math"
 	"strconv"
 	"strings"
 )
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/04/input-user.txt", false)
+	util.Run(run, "2023/04/input-user.txt", true)
 }
 
 type card struct {
@@ -30,19 +29,14 @@ func newCard(id int, winningNumbers []int, yourNumbers []int) card {
 	return card{id, makeSet(winningNumbers), makeSet(yourNumbers)}
 }
 
-func (c card) points() int {
+func (c card) matchingNumbers() int {
 	matchingNumbers := 0
 	for num := range c.winningNumbers {
 		if c.yourNumbers[num] {
 			matchingNumbers++
 		}
 	}
-
-	if matchingNumbers == 0 {
-		return 0
-	} else {
-		return int(math.Pow(2, float64(matchingNumbers-1)))
-	}
+	return matchingNumbers
 }
 
 func parseNumbers(line string) []int {
@@ -73,14 +67,27 @@ func parseCard(line string) card {
 }
 
 func run(part2 bool, input string) any {
-	if part2 {
+	if !part2 {
 		return "not implemented"
 	}
 
-	totalPoints := 0
-	for _, line := range util.Lines(input) {
+	lines := util.Lines(input)
+	totalPoints := len(lines)
+	matchesPerCard := make([]int, len(lines)+1)
+	for _, line := range lines {
 		card := parseCard(line)
-		totalPoints += card.points()
+		matchingNums := card.matchingNumbers()
+		matchesPerCard[card.id] = matchingNums
+	}
+
+	cardsPerGame := map[int]int{}
+	for game := len(lines); game > 0; game-- {
+		cardsThisGame := matchesPerCard[game]
+		for i := 1; i <= matchesPerCard[game]; i++ {
+			cardsThisGame += cardsPerGame[game+i]
+		}
+		cardsPerGame[game] = cardsThisGame
+		totalPoints += cardsThisGame
 	}
 
 	return totalPoints
