@@ -9,56 +9,94 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/05/input-user.txt", false)
+	util.Run(run, "2023/05/input-user.txt", true)
 }
 
 type MapEntry struct {
-	sourceRangeStart int
-	rangeLength      int
-	destDelta        int
+	interval Interval
+	delta    int
 }
 
 func NewMapEntry(destRangeStart int, sourceRangeStart int, rangeLength int) MapEntry {
 	return MapEntry{
-		sourceRangeStart: sourceRangeStart,
-		rangeLength:      rangeLength,
-		destDelta:        destRangeStart - sourceRangeStart,
+		interval: Interval{sourceRangeStart, sourceRangeStart + rangeLength - 1},
+		delta:    destRangeStart - sourceRangeStart,
 	}
 }
 
-func (entry MapEntry) Convert(source int) (int, bool) {
-	if source >= entry.sourceRangeStart && source < entry.sourceRangeStart+entry.rangeLength {
-		return source + entry.destDelta, true
-	} else {
-		return source, false
+func (entry MapEntry) Convert(source Interval) (Interval, []Interval, bool) {
+	intersection, intersects := entry.interval.Intersection(source)
+	if !intersects {
+		return Interval{}, []Interval{source}, false
 	}
+
+	var leftoverIntervals []Interval
+	if source.start < entry.interval.start {
+		leftoverIntervals = append(leftoverIntervals, Interval{source.start, entry.interval.start - 1})
+	}
+	if source.end > entry.interval.end {
+		leftoverIntervals = append(leftoverIntervals, Interval{entry.interval.end + 1, source.end})
+	}
+
+	return intersection.Add(entry.delta), leftoverIntervals, true
 }
 
 type Map struct {
 	entries []MapEntry
 }
 
-func (m Map) Convert(source int) int {
+func (m Map) Convert(sources []Interval) []Interval {
+	var results []Interval
+	remainingSources := sources
 	for _, entry := range m.entries {
-		dest, converted := entry.Convert(source)
-		if converted {
-			return dest
+		var allLeftovers []Interval
+		for _, interval := range remainingSources {
+			converted, leftovers, didConvert := entry.Convert(interval)
+			if didConvert {
+				results = append(results, converted)
+			}
+			allLeftovers = append(allLeftovers, leftovers...)
 		}
+		remainingSources = allLeftovers
 	}
-	return source
+	return append(results, remainingSources...)
+}
+
+type Interval struct {
+	start, end int // Inclusive
+}
+
+func (i Interval) Intersection(o Interval) (Interval, bool) {
+	latestStart := max(i.start, o.start)
+	earliestEnd := min(i.end, o.end)
+
+	if latestStart > earliestEnd {
+		return Interval{}, false
+	} else {
+		return Interval{latestStart, earliestEnd}, true
+	}
+}
+
+func (i Interval) Add(delta int) Interval {
+	return Interval{i.start + delta, i.end + delta}
 }
 
 type Almanac struct {
-	seeds []int
+	seeds []Interval
 	maps  []Map
 }
 
-func (al Almanac) MapLocation(seed int) int {
-	result := seed
-	for _, nextMap := range al.maps {
-		result = nextMap.Convert(result)
+func (al Almanac) MinLocation() int {
+	results := al.seeds
+	for _, m := range al.maps {
+		results = m.Convert(results)
 	}
-	return result
+
+	minLocation := math.MaxInt
+	for _, locationRange := range results {
+		minLocation = min(minLocation, locationRange.start)
+	}
+	return minLocation
 }
 
 func parseInts(line string) []int {
@@ -73,12 +111,27 @@ func parseInts(line string) []int {
 	return ints
 }
 
+func parseSeeds(line string) []Interval {
+	var seeds []Interval
+	seedRanges := parseInts(line)
+	numRanges := len(seedRanges) / 2
+
+	for i := 0; i < numRanges; i++ {
+		rangeStart := seedRanges[2*i]
+		rangeSize := seedRanges[2*i+1]
+		rangeEnd := rangeStart + rangeSize - 1
+		seeds = append(seeds, Interval{rangeStart, rangeEnd})
+	}
+
+	return seeds
+}
+
 func parseAlmanac(input string) Almanac {
 	almanac := Almanac{}
 	var currMap *Map
 	for _, line := range util.AllLines(input) {
 		if strings.HasPrefix(line, "seeds:") {
-			almanac.seeds = parseInts(line[7:])
+			almanac.seeds = parseSeeds(line[7:])
 		}
 
 		if strings.Contains(line, " map:") {
@@ -99,17 +152,9 @@ func parseAlmanac(input string) Almanac {
 }
 
 func run(part2 bool, input string) any {
-	// when you're ready to do part 2, remove this "not implemented" block
-	if part2 {
+	if !part2 {
 		return "not implemented"
 	}
 
-	almanac := parseAlmanac(input)
-	lowestLocation := math.MaxInt
-	for _, seed := range almanac.seeds {
-		location := almanac.MapLocation(seed)
-		lowestLocation = min(lowestLocation, location)
-	}
-
-	return lowestLocation
+	return parseAlmanac(input).MinLocation()
 }
