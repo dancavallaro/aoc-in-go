@@ -6,9 +6,13 @@ import (
 	"strings"
 )
 
+func AllLines(input string) []string {
+	return strings.Split(input, "\n")
+}
+
 func Lines(input string) []string {
 	nonEmptyLines := make([]string, 0)
-	for _, line := range strings.Split(input, "\n") {
+	for _, line := range AllLines(input) {
 		if len(line) > 0 {
 			nonEmptyLines = append(nonEmptyLines, line)
 		}
