@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -28,4 +29,19 @@ func Run(runFunc func(bool, string) any, inputPath string, part2 bool) {
 
 	input := string(bytes)
 	fmt.Println(runFunc(part2, input))
+}
+
+func ParseInts(line string) []int {
+	var ints []int
+	for _, intStr := range strings.Split(line, " ") {
+		if intStr == "" {
+			continue
+		}
+		theInt, err := strconv.Atoi(intStr)
+		if err != nil {
+			panic(err)
+		}
+		ints = append(ints, theInt)
+	}
+	return ints
 }

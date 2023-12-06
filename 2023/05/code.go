@@ -3,7 +3,6 @@ package main
 import (
 	"aoc-in-go/pkg/util"
 	"math"
-	"strconv"
 	"strings"
 )
 
@@ -99,21 +98,9 @@ func (al Almanac) MinLocation() int {
 	return minLocation
 }
 
-func parseInts(line string) []int {
-	var ints []int
-	for _, intStr := range strings.Split(line, " ") {
-		theInt, err := strconv.Atoi(intStr)
-		if err != nil {
-			panic(err)
-		}
-		ints = append(ints, theInt)
-	}
-	return ints
-}
-
 func parseSeeds(line string) []Interval {
 	var seeds []Interval
-	seedRanges := parseInts(line)
+	seedRanges := util.ParseInts(line)
 	numRanges := len(seedRanges) / 2
 
 	for i := 0; i < numRanges; i++ {
@@ -141,7 +128,7 @@ func parseAlmanac(input string) Almanac {
 				almanac.maps = append(almanac.maps, *currMap)
 				currMap = nil
 			} else {
-				entry := parseInts(line)
+				entry := util.ParseInts(line)
 				destRangeStart, sourceRangeStart, rangeLength := entry[0], entry[1], entry[2]
 				currMap.entries = append(currMap.entries, NewMapEntry(destRangeStart, sourceRangeStart, rangeLength))
 			}
