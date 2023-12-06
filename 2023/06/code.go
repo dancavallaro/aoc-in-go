@@ -7,7 +7,7 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/06/input-user.txt", false)
+	util.Run(run, "2023/06/input-user.txt", true)
 }
 
 func numWinningWays(time int, distance int) int {
@@ -46,14 +46,21 @@ func parseNums(line string) []int {
 	return util.ParseInts(numStr)
 }
 
-func run(part2 bool, input string) any {
-	if part2 {
-		return "not implemented"
-	}
+func parseBigNum(line string) []int {
+	lineWithoutSpace := strings.ReplaceAll(line, " ", "")
+	return parseNums(lineWithoutSpace)
+}
 
+func run(part2 bool, input string) any {
 	lines := util.Lines(input)
-	times := parseNums(lines[0])
-	distances := parseNums(lines[1])
+	var times, distances []int
+	if part2 {
+		times = parseBigNum(lines[0])
+		distances = parseBigNum(lines[1])
+	} else {
+		times = parseNums(lines[0])
+		distances = parseNums(lines[1])
+	}
 	result := 1
 
 	for i, time := range times {
