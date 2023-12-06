@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option go_package = "aoc-in-go/proto";
+
+package aoc;
+
+service AOCSolver {
+  rpc Solve (SolveRequest) returns (SolveResponse);
+}
+
+message SolveRequest {
+  int32 year = 1;
+  int32 day = 2;
+  bool part2 = 3;
+  string input = 4;
+}
+
+message SolveResponse {
+  string result = 1;
+}
