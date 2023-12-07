@@ -10,7 +10,7 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "input-user.txt", false)
+	util.Run(run, "input-user.txt", true)
 }
 
 type Rank int
@@ -39,21 +39,42 @@ func rankHand(hand Hand) Rank {
 		counts[c]++
 	}
 	maxCount := maxValue(counts)
+	numJokers := counts['J']
 
 	if len(counts) == 1 {
 		return FiveOfAKind
 	} else if len(counts) == 2 && maxCount == 4 {
+		if numJokers > 0 {
+			return FiveOfAKind
+		}
 		return FourOfAKind
 	} else if len(counts) == 2 && maxCount == 3 {
+		if numJokers > 0 {
+			return FiveOfAKind
+		}
 		return FullHouse
 	} else if maxCount == 3 {
+		if numJokers > 0 {
+			return FourOfAKind
+		}
 		return ThreeOfAKind
 	} else if len(counts) == 3 {
+		if numJokers == 2 {
+			return FourOfAKind
+		} else if numJokers == 1 {
+			return FullHouse
+		}
 		return TwoPair
 	} else if maxCount == 2 {
+		if numJokers > 0 {
+			return ThreeOfAKind
+		}
 		return OnePair
 	}
 
+	if numJokers > 0 {
+		return OnePair
+	}
 	return HighCard
 }
 
@@ -65,11 +86,9 @@ func rankCards(ordering []rune) map[rune]int {
 	return ranking
 }
 
-var CardOrder = []rune{'A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'}
+var CardOrder = []rune{'A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2', 'J'}
 var CardRankings = rankCards(CardOrder)
 
-// TODO: are hands of type HighCard compared based on their highest card, or
-// in order of cards like the regular tiebreaker?
 func strongerThan(hand1 Hand, hand2 Hand) bool {
 	for i := 0; i < 5; i++ {
 		rank1, rank2 := CardRankings[hand1.cards[i]], CardRankings[hand2.cards[i]]
@@ -107,13 +126,12 @@ func parseHand(line string) Hand {
 		panic(err)
 	}
 	hand := Hand{cards, bid}
-	//fmt.Printf("hand = %v, bid = %d; rank = %d\n", cards, bid, rankHand(cards))
 
 	return hand
 }
 
 func run(part2 bool, input string) any {
-	if part2 {
+	if !part2 {
 		return "not implemented"
 	}
 
