@@ -6,7 +6,7 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/08/input-user.txt", false)
+	util.Run(run, "2023/08/input-user.txt", true)
 }
 
 type Node struct {
@@ -14,23 +14,42 @@ type Node struct {
 	left, right string
 }
 
-func findNode(network map[string]Node, start string, instructions string) string {
-	currNode := start
+func findNodes(network map[string]Node, starts []string, instructions string) ([]string, int, bool) {
+	currNodes := starts
+	stepsTaken := 0
+	foundEnd := false
 
 	for _, ins := range []rune(instructions) {
-		node := network[currNode]
-		if ins == 'L' {
-			currNode = node.left
-		} else if ins == 'R' {
-			currNode = node.right
+		stepsTaken++
+		for i, currNode := range currNodes {
+			node := network[currNode]
+			if ins == 'L' {
+				currNode = node.left
+			} else if ins == 'R' {
+				currNode = node.right
+			}
+			currNodes[i] = currNode
+		}
+		if allEndNodes(currNodes) {
+			foundEnd = true
+			break
 		}
 	}
 
-	return currNode
+	return currNodes, stepsTaken, foundEnd
+}
+
+func allEndNodes(nodes []string) bool {
+	for _, label := range nodes {
+		if label[2] != 'Z' {
+			return false
+		}
+	}
+	return true
 }
 
 func run(part2 bool, input string) any {
-	if part2 {
+	if !part2 {
 		return "not implemented"
 	}
 
@@ -38,6 +57,7 @@ func run(part2 bool, input string) any {
 	instructions := lines[0]
 
 	network := map[string]Node{}
+	var startNodes []string
 	for _, line := range lines[2:] {
 		if line == "" {
 			continue
@@ -49,15 +69,20 @@ func run(part2 bool, input string) any {
 			right: line[12:15],
 		}
 		network[label] = node
+
+		lastChar := label[2]
+		if lastChar == 'A' {
+			startNodes = append(startNodes, label)
+		}
 	}
 
 	numSteps := 0
-	currNode := "AAA"
+	currNodes := startNodes
 	for {
-		currNode = findNode(network, currNode, instructions)
-		numSteps += len(instructions)
-
-		if currNode == "ZZZ" {
+		nextNodes, stepsTaken, foundEnd := findNodes(network, currNodes, instructions)
+		currNodes = nextNodes
+		numSteps += stepsTaken
+		if foundEnd {
 			break
 		}
 	}
