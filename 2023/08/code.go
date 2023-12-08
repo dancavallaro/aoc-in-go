@@ -2,6 +2,7 @@ package main
 
 import (
 	"aoc-in-go/pkg/util"
+	"fmt"
 )
 
 func main() {
@@ -76,16 +77,19 @@ func run(part2 bool, input string) any {
 		}
 	}
 
-	numSteps := 0
-	currNodes := startNodes
-	for {
-		nextNodes, stepsTaken, foundEnd := findNodes(network, currNodes, instructions)
-		currNodes = nextNodes
-		numSteps += stepsTaken
-		if foundEnd {
-			break
+	for _, startNode := range startNodes {
+		numSteps := 0
+		currNodes := []string{startNode}
+		for {
+			nextNodes, stepsTaken, foundEnd := findNodes(network, currNodes, instructions)
+			currNodes = nextNodes
+			numSteps += stepsTaken
+			if foundEnd {
+				break
+			}
 		}
+		fmt.Printf("%s to %s took %d steps\n", startNode, currNodes[0], numSteps)
 	}
 
-	return numSteps
+	return -1
 }
