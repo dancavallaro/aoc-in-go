@@ -6,7 +6,7 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/09/input-user.txt", false)
+	util.Run(run, "2023/09/input-user.txt", true)
 }
 
 func allZeroes(nums []int) bool {
@@ -32,29 +32,29 @@ func findDifferences(history []int) [][]int {
 	return differences
 }
 
-func extrapolateValue(differences [][]int) int {
+func extrapolateValue(differences [][]int, part2 bool) int {
 	val := 0
 	for i := len(differences) - 2; i >= 0; i-- {
 		row := differences[i]
-		val = val + row[len(row)-1]
+		if part2 {
+			val = row[0] - val
+		} else {
+			val = val + row[len(row)-1]
+		}
 	}
 	return val
 }
 
-func forecast(history []int) int {
+func forecast(history []int, part2 bool) int {
 	differences := findDifferences(history)
-	return extrapolateValue(differences)
+	return extrapolateValue(differences, part2)
 }
 
 func run(part2 bool, input string) any {
-	if part2 {
-		return "not implemented"
-	}
-
 	sum := 0
 	for _, line := range util.Lines(input) {
 		history := util.ParseInts(line)
-		sum += forecast(history)
+		sum += forecast(history, part2)
 	}
 	return sum
 }
