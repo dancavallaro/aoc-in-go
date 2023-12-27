@@ -6,29 +6,33 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/11/input-user.txt", false)
+	util.Run(run, "2023/11/input-user.txt", true)
 }
 
 type galaxy struct {
 	row, col int
 }
 
+var emptySpaceSize = 2
+
 func findDistance(galA galaxy, galB galaxy, galRows []bool, galCols []bool) int {
 	distance := 0
 
 	startRow, endRow := min(galA.row, galB.row), max(galA.row, galB.row)
 	for row := startRow; row < endRow; row++ {
-		distance++
-		if !galRows[row] {
+		if galRows[row] {
 			distance++
+		} else {
+			distance += emptySpaceSize
 		}
 	}
 
 	startCol, endCol := min(galA.col, galB.col), max(galA.col, galB.col)
 	for col := startCol; col < endCol; col++ {
-		distance++
-		if !galCols[col] {
+		if galCols[col] {
 			distance++
+		} else {
+			distance += emptySpaceSize
 		}
 	}
 
@@ -37,7 +41,7 @@ func findDistance(galA galaxy, galB galaxy, galRows []bool, galCols []bool) int 
 
 func run(part2 bool, input string) any {
 	if part2 {
-		return "not implemented"
+		emptySpaceSize = 1000000
 	}
 
 	lines := util.Lines(input)
