@@ -2,14 +2,13 @@ package main
 
 import (
 	"aoc-in-go/pkg/util"
-	"fmt"
 	"strconv"
 	"strings"
 )
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/12/input-user.txt", false)
+	util.Run(run, "2023/12/input-user.txt", true)
 }
 
 type condition int
@@ -44,40 +43,42 @@ func (gc groupCounts) dropEmpty() groupCounts {
 	return gc
 }
 
-/*
-State is represented by springs remaining (conditions slice), damaged group counts remaining,
-and condition of the previous spring in this arrangement.
+func (gc groupCounts) sum() int {
+	total := 0
+	for _, count := range gc {
+		total += count
+	}
+	return total
+}
 
-We start with the full original conditions slice and damaged group counts, and "previous spring state"
-unknown (this is the only time we'll use this state, since when we choose an arrangement all springs
-will be either damaged or operational, never unknown).
+type cacheKey struct {
+	springsUsed, damagedSpringsUsed int
+	lastSpringState                 condition
+}
 
-Base case is when the conditions slice is empty, i.e. we've used all the springs. If damaged
-group counts is empty (or only has a 0 entry), return 1, otherwise return 0. Damaged group
-counts being empty is not a base case, it just means there can't be any remaining damaged
-springs (could be either 1 or 0, depending).
+type cache struct {
+	originalConditions  []condition
+	damagedSpringGroups groupCounts
+	cacheStore          map[cacheKey]*int
+}
 
-State transitions depend on the current spring status:
+func newCache(originalConditions []condition, damagedSpringGroups groupCounts) cache {
+	return cache{originalConditions, damagedSpringGroups, map[cacheKey]*int{}}
+}
 
-- operational:
-  - if the last spring was damaged and we did NOT just end a group, return 0
-  - otherwise, recurse and go to the next spring
-- damaged:
-  - if damaged group counts is 0 or empty, OR we just completed a group, return 0
-  - decrement damaged group count, and recurse to next spring
-- unknown:
-  - if the last spring wasn't damaged, or it was but we ended a group, then we can consider this operational
-  - if damaged group counts is non-empty/zero, and we did NOT just complete a group, we can consider this damaged
-  - return the sum of the two optional parts
-*/
+func (c cache) makeKey(conditions []condition, damagedSprings groupCounts, lastSpringState condition) cacheKey {
+	springsUsed := len(c.originalConditions) - len(conditions)
+	damagedSpringsUsed := c.damagedSpringGroups.sum() - damagedSprings.sum()
+	return cacheKey{springsUsed, damagedSpringsUsed, lastSpringState}
+}
 
-func countArrangementsRecurse(conditions []condition, damagedSprings groupCounts, lastSpringState condition, indent, s string) int {
+func countArrangementsRecurse(c cache, conditions []condition, damagedSprings groupCounts, lastSpringState condition, indent, s string) int {
 	//fmt.Printf("%sconditions = %v, damagedSprings = %v, lastCondition = %v\n", indent, conditions, damagedSprings, lastSpringState)
 	indent += "  "
 
 	if len(conditions) == 0 {
 		if damagedSprings.isEmpty() {
-			fmt.Printf(" ==> Found valid arrangement: %s\n", s)
+			//fmt.Printf(" ==> Found valid arrangement: %s\n", s)
 			return 1
 		} else {
 			return 0
@@ -91,28 +92,50 @@ func countArrangementsRecurse(conditions []condition, damagedSprings groupCounts
 	if conditions[0] == damaged || conditions[0] == unknown {
 		considerDamaged = !damagedSprings.isEmpty() && !damagedSprings.justFinishedGroup()
 	}
-
 	damagedSprings = damagedSprings.dropEmpty()
-	arrangements := 0
-	if considerOperational {
-		arrangements += countArrangementsRecurse(conditions[1:], damagedSprings, operational, indent, s+".")
+
+	key := c.makeKey(conditions, damagedSprings, lastSpringState)
+	if c.cacheStore[key] == nil {
+		arrangements := 0
+		if considerOperational {
+			arrangements += countArrangementsRecurse(c, conditions[1:], damagedSprings, operational, indent, s+".")
+		}
+		if considerDamaged {
+			damagedSprings = damagedSprings.decrement()
+			arrangements += countArrangementsRecurse(c, conditions[1:], damagedSprings, damaged, indent, s+"#")
+		}
+		c.cacheStore[key] = &arrangements
 	}
-	if considerDamaged {
-		damagedSprings = damagedSprings.decrement()
-		arrangements += countArrangementsRecurse(conditions[1:], damagedSprings, damaged, indent, s+"#")
-	}
-	return arrangements
+	return *c.cacheStore[key]
 }
 
 func countArrangements(conditions []condition, damagedGroupCounts []int) int {
-	return countArrangementsRecurse(conditions, damagedGroupCounts, unknown, "", "")
+	return countArrangementsRecurse(newCache(conditions, damagedGroupCounts), conditions, damagedGroupCounts, unknown, "", "")
+}
+
+const unfoldingMultiplier = 5
+
+func repeat[T any](input []T, sep *T) []T {
+	newLength := unfoldingMultiplier * len(input)
+	if sep != nil {
+		newLength += unfoldingMultiplier - 1
+	}
+
+	output := make([]T, newLength)
+	currIdx := 0
+	for i := 0; i < unfoldingMultiplier; i++ {
+		copy(output[currIdx:], input)
+		currIdx += len(input)
+
+		if sep != nil && i < unfoldingMultiplier-1 {
+			output[currIdx] = *sep
+			currIdx++
+		}
+	}
+	return output
 }
 
 func run(part2 bool, input string) any {
-	if part2 {
-		return "not implemented"
-	}
-
 	totalArrangements := 0
 	for _, line := range util.Lines(input) {
 		parts := strings.Split(line, " ")
@@ -140,8 +163,12 @@ func run(part2 bool, input string) any {
 			damagedGroupCounts = append(damagedGroupCounts, count)
 		}
 
+		if part2 {
+			separator := unknown
+			conditions, damagedGroupCounts = repeat(conditions, &separator), repeat(damagedGroupCounts, nil)
+		}
 		arrangements := countArrangements(conditions, damagedGroupCounts)
-		fmt.Printf("%d arrangements for line: %s\n", arrangements, line)
+		//fmt.Printf("%d arrangements for line: %s\n", arrangements, line)
 		totalArrangements += arrangements
 	}
 
