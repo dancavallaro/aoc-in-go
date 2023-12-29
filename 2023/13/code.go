@@ -7,7 +7,7 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/13/input-user.txt", false)
+	util.Run(run, "2023/13/input-user.txt", true)
 }
 
 type pattern [][]rune
@@ -54,25 +54,35 @@ func encode(line []rune) int64 {
 	return result
 }
 
-func isPalindrome(code []int64) bool {
+func oneBitFlipped(one, two int64) bool {
+	differingBits := one ^ two
+	return (differingBits & (differingBits - 1)) == 0
+}
+
+func isPalindromeWithBitFlip(code []int64) bool {
 	if len(code)%2 == 1 {
 		// These palindromes will all have even length
 		return false
 	}
 
+	flippedBit := false
 	for i, j := 0, len(code)-1; i < j; i, j = i+1, j-1 {
 		if code[i] != code[j] {
-			return false
+			if !flippedBit && oneBitFlipped(code[i], code[j]) {
+				flippedBit = true
+			} else {
+				return false
+			}
 		}
 	}
-	return true
+	return flippedBit
 }
 
 func longestPalindrome(code []int64) (int, int) {
 	numBeforeStart := 0
 	longestFromStart := 0
 	for i := len(code); i > 0; i-- {
-		if isPalindrome(code[0:i]) {
+		if isPalindromeWithBitFlip(code[0:i]) {
 			longestFromStart = i
 			numBeforeStart = i / 2
 			break
@@ -82,7 +92,7 @@ func longestPalindrome(code []int64) (int, int) {
 	numBeforeEnd := 0
 	longestFromEnd := 0
 	for i := 0; i < len(code); i++ {
-		if isPalindrome(code[i:]) {
+		if isPalindromeWithBitFlip(code[i:]) {
 			longestFromEnd = len(code) - i
 			numBeforeEnd = (len(code) + i) / 2
 			break
@@ -97,7 +107,7 @@ func longestPalindrome(code []int64) (int, int) {
 }
 
 func run(part2 bool, input string) any {
-	if part2 {
+	if !part2 {
 		return "not implemented"
 	}
 
