@@ -53,3 +53,9 @@ func InvertMap[K comparable, V comparable](m map[K]V) map[V]K {
 	}
 	return inverted
 }
+
+func CopySlice[T any](original []T) []T {
+	newSlice := make([]T, len(original))
+	copy(newSlice, original)
+	return newSlice
+}
