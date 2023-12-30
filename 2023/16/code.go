@@ -3,13 +3,12 @@ package main
 import (
 	"aoc-in-go/pkg/util"
 	"fmt"
-	"reflect"
 	"strings"
 )
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/16/input-user.txt", false)
+	util.Run(run, "2023/16/input-user.txt", true)
 }
 
 type Grid [][]rune
@@ -65,7 +64,7 @@ func (dir Direction) Symbol() rune {
 	} else if dir == West {
 		return '<'
 	}
-	return ' '
+	return '#'
 }
 
 type Beam struct {
@@ -85,8 +84,6 @@ func (bs Beams) String() string {
 	sb.WriteString("]")
 	return sb.String()
 }
-
-var initialBeam = Beam{0, 0, East, false}
 
 func (b *Beam) Step(grid Grid, energized Grid) {
 	newI, newJ := b.i+b.dir.deltaI, b.j+b.dir.deltaJ
@@ -124,8 +121,39 @@ func NextMove(beam *Beam, grid Grid, energized Grid) *Beam {
 	return splitBeam
 }
 
+func countEnergized(grid Grid, initialBeam Beam) int {
+	energized := make(Grid, len(grid))
+	for i, row := range grid {
+		energized[i] = make([]rune, len(row))
+		for j := range row {
+			energized[i][j] = '.'
+		}
+	}
+	energized[initialBeam.i][initialBeam.j] = initialBeam.dir.Symbol()
+
+	var beams Beams = []*Beam{&initialBeam}
+	seen := make(map[string]bool)
+	for {
+		for _, beam := range beams {
+			if !beam.Done {
+				splitBeam := NextMove(beam, grid, energized)
+				//fmt.Println("Split beam: ", splitBeam)
+				if splitBeam != nil {
+					beams = append(beams, splitBeam)
+				}
+			}
+		}
+		if seen[energized.String()] {
+			break
+		}
+		seen[energized.String()] = true
+	}
+
+	return (len(grid) * len(grid[0])) - energized.CountSymbols('.')
+}
+
 func run(part2 bool, input string) any {
-	if part2 {
+	if !part2 {
 		return "not implemented"
 	}
 
@@ -135,45 +163,21 @@ func run(part2 bool, input string) any {
 		grid[i] = []rune(line)
 	}
 
-	var beams Beams = []*Beam{&initialBeam}
-
-	energized := make(Grid, len(grid))
-	for i, row := range grid {
-		energized[i] = make([]rune, len(row))
-		for j, _ := range row {
-			energized[i][j] = '.'
-		}
+	var initialBeams []Beam
+	for i := range grid {
+		initialBeams = append(initialBeams, Beam{i, 0, East, false})
+		initialBeams = append(initialBeams, Beam{i, len(grid[i]) - 1, West, false})
 	}
-	energized[0][0] = initialBeam.dir.Symbol()
-
-	for {
-		allDone := true
-		energizedBefore := energized.Copy()
-		for _, beam := range beams {
-			if !beam.Done {
-				allDone = false
-				splitBeam := NextMove(beam, grid, energized)
-				//fmt.Println("Split beam: ", splitBeam)
-				if splitBeam != nil {
-					beams = append(beams, splitBeam)
-				}
-			}
-		}
-
-		if allDone {
-			break
-		}
-
-		if reflect.DeepEqual(energized, energizedBefore) {
-			fmt.Println("Beams have converged!")
-			fmt.Println(energized)
-			break
-		}
-
-		//fmt.Println(energized)
-		//fmt.Println()
-		//time.Sleep(100 * time.Millisecond)
+	for j := range grid[0] {
+		initialBeams = append(initialBeams, Beam{0, j, South, false})
+		initialBeams = append(initialBeams, Beam{len(grid) - 1, j, North, false})
 	}
 
-	return (len(grid) * len(grid[0])) - energized.CountSymbols('.')
+	maxEnergized := 0
+	for _, initialBeam := range initialBeams {
+		energized := countEnergized(grid, initialBeam)
+		maxEnergized = max(maxEnergized, energized)
+		fmt.Printf("%v -> %d\n", initialBeam, energized)
+	}
+	return maxEnergized
 }
