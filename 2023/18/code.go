@@ -41,15 +41,29 @@ func run(part2 bool, input string) any {
 
 	currCoord := Coord{0, 0}
 	digPath := []Coord{currCoord}
+	pathLines := map[Coord]rune{}
 	maxI, maxJ := 0, 0
 	for _, line := range util.Lines(input) {
 		digPlanParts := digPlanEntryRegex.FindStringSubmatch(line)
-		direction, distanceStr := digPlanParts[1], digPlanParts[2]
+		directionStr, distanceStr := digPlanParts[1], digPlanParts[2]
+		direction := Directions[directionStr]
 		distance, err := strconv.Atoi(distanceStr)
 		if err != nil {
 			panic(err)
 		}
-		currCoord = currCoord.Move(Directions[direction], distance)
+
+		pathLine := 'x' // TODO
+		if direction == grids.East || direction == grids.West {
+			pathLine = '-'
+		} else if direction == grids.South || direction == grids.North {
+			pathLine = '|'
+		}
+		for delta := 1; delta <= distance; delta++ {
+			nextCoord := currCoord.Move(direction, delta)
+			pathLines[nextCoord] = pathLine
+		}
+
+		currCoord = currCoord.Move(direction, distance)
 		digPath = append(digPath, currCoord)
 		maxI, maxJ = max(maxI, currCoord.i), max(maxJ, currCoord.j)
 	}
@@ -64,10 +78,10 @@ func run(part2 bool, input string) any {
 	}
 
 	grid := grids.NewWithFill(maxI+1, maxJ+1, '.')
-	for _, coord := range digPath {
-		grid[coord.i][coord.j] = '#'
+	for coord, char := range pathLines {
+		grid[coord.i][coord.j] = char
 	}
-	//fmt.Println(grid)
+	fmt.Println(grid)
 
 	return doubleArea / 2
 }
