@@ -2,9 +2,9 @@ package main
 
 import (
 	"aoc-in-go/pkg/collections"
+	"aoc-in-go/pkg/grids"
 	"aoc-in-go/pkg/util"
 	"math"
-	"strings"
 )
 
 func main() {
@@ -12,52 +12,15 @@ func main() {
 	util.Run(run, "2023/17/input-user.txt", true)
 }
 
-type Grid [][]rune
-
-func (g Grid) String() string {
-	var sb strings.Builder
-	for _, row := range g {
-		sb.WriteString(string(row))
-		sb.WriteRune('\n')
-	}
-	return sb.String()
-}
-
-func (g Grid) Copy() Grid {
-	newG := make(Grid, len(g))
-	for i, row := range g {
-		newG[i] = make([]rune, len(row))
-		copy(newG[i], row)
-	}
-	return newG
-}
-
-type Direction struct {
-	deltaI, deltaJ int
-}
-
-func (dir Direction) Left() Direction {
-	return Direction{-dir.deltaJ, dir.deltaI}
-}
-
-func (dir Direction) Right() Direction {
-	return Direction{dir.deltaJ, -dir.deltaI}
-}
-
-var North = Direction{-1, 0}
-var East = Direction{0, 1}
-var South = Direction{1, 0}
-var West = Direction{0, -1}
-
 type PathState struct {
 	i, j         int
 	movesThisDir int
-	dir          Direction
+	dir          grids.Direction
 }
 
 func (ps PathState) Move() PathState {
-	newI := ps.i + ps.dir.deltaI
-	newJ := ps.j + ps.dir.deltaJ
+	newI := ps.i + ps.dir.DeltaI
+	newJ := ps.j + ps.dir.DeltaJ
 	return PathState{newI, newJ, ps.movesThisDir + 1, ps.dir}
 }
 
@@ -76,7 +39,7 @@ func distance(distances map[PathState]int, state PathState) int {
 	return math.MaxInt
 }
 
-func filterInvalid(states []PathState, grid Grid) []PathState {
+func filterInvalid(states []PathState, grid grids.Grid) []PathState {
 	var validStates []PathState
 	for _, state := range states {
 		if state.i >= 0 && state.i < len(grid) && state.j >= 0 && state.j < len(grid[0]) {
@@ -86,7 +49,7 @@ func filterInvalid(states []PathState, grid Grid) []PathState {
 	return validStates
 }
 
-func shortestPath(grid Grid, source PathState) (map[PathState]int, map[PathState]PathState) {
+func shortestPath(grid grids.Grid, source PathState) (map[PathState]int, map[PathState]PathState) {
 	distances := map[PathState]int{source: 0}
 	previous := map[PathState]PathState{}
 	queue := collections.NewPriorityQueue[PathState](func(a, b PathState) bool {
@@ -128,12 +91,12 @@ func run(part2 bool, input string) any {
 	}
 
 	lines := util.Lines(input)
-	var grid Grid = make([][]rune, len(lines))
+	var grid grids.Grid = make([][]rune, len(lines))
 	for i, line := range lines {
 		grid[i] = []rune(line)
 	}
 
-	initialState := PathState{0, 0, 0, East}
+	initialState := PathState{0, 0, 0, grids.East}
 	distances, _ := shortestPath(grid, initialState)
 
 	minDistance := math.MaxInt
