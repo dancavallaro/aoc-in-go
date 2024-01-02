@@ -10,7 +10,7 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/18/input-example.txt", false)
+	util.Run(run, "2023/18/input-user.txt", false)
 }
 
 type Coord struct {
@@ -32,7 +32,7 @@ func determinant(one Coord, two Coord) int {
 	return one.j*two.i - one.i*two.j
 }
 
-var digPlanEntryRegex = regexp.MustCompile("([A-Z]) ([0-9]) .+")
+var digPlanEntryRegex = regexp.MustCompile("([A-Z]) ([0-9]+) .+")
 
 func run(part2 bool, input string) any {
 	if part2 {
@@ -78,10 +78,47 @@ func run(part2 bool, input string) any {
 	}
 
 	grid := grids.NewWithFill(maxI+1, maxJ+1, '.')
-	for coord, char := range pathLines {
-		grid[coord.i][coord.j] = char
+	for coord, _ := range pathLines {
+		grid[coord.i][coord.j] = '#' //char
 	}
 	fmt.Println(grid)
+	markInterior(grid)
+	fmt.Println(grid)
 
-	return doubleArea / 2
+	totalArea := (maxI + 1) * (maxJ + 1)
+	for _, row := range grid {
+		for _, cell := range row {
+			if cell == '*' {
+				totalArea--
+			}
+		}
+	}
+	return totalArea
+}
+
+func markInterior(grid grids.Grid) {
+	for i := range grid {
+		floodFill(grid, i, 0)
+		floodFill(grid, i, len(grid[i])-1)
+	}
+	for j := range grid[0] {
+		floodFill(grid, 0, j)
+		floodFill(grid, len(grid)-1, j)
+	}
+}
+
+func floodFill(grid grids.Grid, i, j int) {
+	if i < 0 || j < 0 || i >= len(grid) || j >= len(grid[0]) {
+		return
+	}
+	if grid[i][j] != '.' {
+		return
+	}
+
+	grid[i][j] = '*'
+
+	floodFill(grid, i, j+1)
+	floodFill(grid, i+1, j)
+	floodFill(grid, i, j-1)
+	floodFill(grid, i-1, j)
 }
