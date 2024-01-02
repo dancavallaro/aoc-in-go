@@ -9,7 +9,7 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/18/input-example.txt", false)
+	util.Run(run, "2023/18/input-small.txt", false)
 }
 
 type Coord struct {
