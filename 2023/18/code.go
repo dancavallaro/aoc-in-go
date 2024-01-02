@@ -60,13 +60,13 @@ func run(part2 bool, input string) any {
 	}
 	fmt.Println(digPath)
 
-	area := 0
+	doubleArea := 0
 	for i, pathNode := range digPath {
 		if i >= len(digPath)-1 {
 			continue
 		}
-		area += determinant(pathNode, digPath[i+1])
+		doubleArea += determinant(pathNode, digPath[i+1])
 	}
 
-	return area
+	return doubleArea / 2
 }
