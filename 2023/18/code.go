@@ -36,7 +36,7 @@ var Directions = map[string]Direction{
 }
 
 func determinant(one Coord, two Coord) int {
-	return one.i*two.j - one.j*two.i
+	return one.j*two.i - one.i*two.j
 }
 
 var digPlanEntryRegex = regexp.MustCompile("([A-Z]) ([0-9]) .+")
