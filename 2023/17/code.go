@@ -9,7 +9,7 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/17/input-user.txt", false)
+	util.Run(run, "2023/17/input-user.txt", true)
 }
 
 type Grid [][]rune
@@ -96,9 +96,13 @@ func shortestPath(grid Grid, source PathState) (map[PathState]int, map[PathState
 
 	for !queue.Empty() {
 		state := queue.Poll()
-		nextStates := []PathState{state.Left().Move(), state.Right().Move()}
-		if state.movesThisDir < 3 {
+		var nextStates []PathState
+		if state.movesThisDir < 10 {
 			nextStates = append(nextStates, state.Move())
+		}
+		if state.movesThisDir >= 4 {
+			nextStates = append(nextStates, state.Left().Move())
+			nextStates = append(nextStates, state.Right().Move())
 		}
 		nextStates = filterInvalid(nextStates, grid)
 		for _, nextState := range nextStates {
@@ -119,7 +123,7 @@ func shortestPath(grid Grid, source PathState) (map[PathState]int, map[PathState
 }
 
 func run(part2 bool, input string) any {
-	if part2 {
+	if !part2 {
 		return "not implemented"
 	}
 
@@ -134,7 +138,7 @@ func run(part2 bool, input string) any {
 
 	minDistance := math.MaxInt
 	for state, dist := range distances {
-		if state.i == len(grid)-1 && state.j == len(grid[0])-1 {
+		if state.i == len(grid)-1 && state.j == len(grid[0])-1 && state.movesThisDir >= 4 {
 			//fmt.Printf("%v -> %d\n", state, dist)
 			minDistance = min(minDistance, dist)
 		}
