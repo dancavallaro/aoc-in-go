@@ -1,6 +1,7 @@
 package main
 
 import (
+	"aoc-in-go/pkg/grids"
 	"aoc-in-go/pkg/util"
 	"fmt"
 	"regexp"
@@ -46,8 +47,9 @@ func run(part2 bool, input string) any {
 		return "not implemented"
 	}
 
-	coord := Coord{0, 0}
-	digPath := []Coord{coord}
+	currCoord := Coord{0, 0}
+	digPath := []Coord{currCoord}
+	maxI, maxJ := 0, 0
 	for _, line := range util.Lines(input) {
 		digPlanParts := digPlanEntryRegex.FindStringSubmatch(line)
 		direction, distanceStr := digPlanParts[1], digPlanParts[2]
@@ -55,8 +57,9 @@ func run(part2 bool, input string) any {
 		if err != nil {
 			panic(err)
 		}
-		coord = coord.Move(Directions[direction], distance)
-		digPath = append(digPath, coord)
+		currCoord = currCoord.Move(Directions[direction], distance)
+		digPath = append(digPath, currCoord)
+		maxI, maxJ = max(maxI, currCoord.i), max(maxJ, currCoord.j)
 	}
 	fmt.Println(digPath)
 
@@ -67,6 +70,12 @@ func run(part2 bool, input string) any {
 		}
 		doubleArea += determinant(pathNode, digPath[i+1])
 	}
+
+	grid := grids.NewWithFill(maxI+1, maxJ+1, '.')
+	for _, coord := range digPath {
+		grid[coord.i][coord.j] = '#'
+	}
+	//fmt.Println(grid)
 
 	return doubleArea / 2
 }

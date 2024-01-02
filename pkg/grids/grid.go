@@ -4,6 +4,17 @@ import "strings"
 
 type Grid [][]rune
 
+func NewWithFill(height, width int, fillChar rune) Grid {
+	grid := make(Grid, height)
+	for i := range grid {
+		grid[i] = make([]rune, width)
+		for j := range grid[i] {
+			grid[i][j] = fillChar
+		}
+	}
+	return grid
+}
+
 func (g Grid) String() string {
 	var sb strings.Builder
 	for _, row := range g {
