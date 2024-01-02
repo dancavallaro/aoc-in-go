@@ -10,30 +10,22 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/18/input-small.txt", false)
+	util.Run(run, "2023/18/input-example.txt", false)
 }
 
 type Coord struct {
 	i, j int
 }
 
-func (c Coord) Move(direction Direction, distance int) Coord {
-	return Coord{c.i + distance*direction.deltaI, c.j + distance*direction.deltaJ}
+func (c Coord) Move(direction grids.Direction, distance int) Coord {
+	return Coord{c.i + distance*direction.DeltaI, c.j + distance*direction.DeltaJ}
 }
 
-type Direction struct {
-	deltaI, deltaJ int
-}
-
-var Up = Direction{-1, 0}
-var Right = Direction{0, 1}
-var Down = Direction{1, 0}
-var Left = Direction{0, -1}
-var Directions = map[string]Direction{
-	"U": Up,
-	"R": Right,
-	"D": Down,
-	"L": Left,
+var Directions = map[string]grids.Direction{
+	"U": grids.North,
+	"R": grids.East,
+	"D": grids.South,
+	"L": grids.West,
 }
 
 func determinant(one Coord, two Coord) int {
