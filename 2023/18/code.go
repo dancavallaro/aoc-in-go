@@ -3,21 +3,23 @@ package main
 import (
 	"aoc-in-go/pkg/grids"
 	"aoc-in-go/pkg/util"
+	"fmt"
 	"regexp"
 	"strconv"
 )
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/18/input-user.txt", false)
+	util.Run(run, "2023/18/input-example.txt", false)
 }
 
 type Coord struct {
-	i, j int
+	i, j             int
+	prevDir, nextDir *grids.Direction
 }
 
 func (c Coord) Move(direction grids.Direction, distance int) Coord {
-	return Coord{c.i + distance*direction.DeltaI, c.j + distance*direction.DeltaJ}
+	return Coord{c.i + distance*direction.DeltaI, c.j + distance*direction.DeltaJ, nil, nil}
 }
 
 var Directions = map[string]grids.Direction{
@@ -27,6 +29,22 @@ var Directions = map[string]grids.Direction{
 	"L": grids.West,
 }
 
+type DirectionChange struct {
+	prevDir, nextDir grids.Direction
+}
+
+func (dc DirectionChange) Equal(other DirectionChange) bool {
+	return dc.prevDir == other.prevDir && dc.nextDir == other.nextDir
+}
+
+func reverse(d grids.Direction) grids.Direction {
+	return grids.Direction{-d.DeltaI, -d.DeltaJ}
+}
+
+func (dc DirectionChange) Reverse() DirectionChange {
+	return DirectionChange{reverse(dc.nextDir), reverse(dc.prevDir)}
+}
+
 var digPlanEntryRegex = regexp.MustCompile("([A-Z]) ([0-9]+) .+")
 
 func run(part2 bool, input string) any {
@@ -34,13 +52,21 @@ func run(part2 bool, input string) any {
 		return "not implemented"
 	}
 
-	currCoord := Coord{0, 0}
+	currCoord := Coord{0, 0, nil, nil}
 	var pathCoords []Coord
+	var lastDirection *grids.Direction
 	maxI, maxJ, minI, minJ := 0, 0, 0, 0
 	for _, line := range util.Lines(input) {
 		digPlanParts := digPlanEntryRegex.FindStringSubmatch(line)
 		directionStr, distanceStr := digPlanParts[1], digPlanParts[2]
 		direction := Directions[directionStr]
+
+		if lastDirection != nil {
+			//fmt.Printf("Changing direction from %v to %v\n", *lastDirection, direction)
+			pathCoords[len(pathCoords)-1].prevDir = lastDirection
+			pathCoords[len(pathCoords)-1].nextDir = &direction
+		}
+
 		distance, err := strconv.Atoi(distanceStr)
 		if err != nil {
 			panic(err)
@@ -53,6 +79,14 @@ func run(part2 bool, input string) any {
 
 		currCoord = currCoord.Move(direction, distance)
 		maxI, maxJ, minI, minJ = max(maxI, currCoord.i), max(maxJ, currCoord.j), min(minI, currCoord.i), min(minJ, currCoord.j)
+		lastDirection = &direction
+	}
+
+	cornerSymbols := map[DirectionChange]rune{
+		{grids.Direction{-1, 0}, grids.Direction{0, 1}}:  'F',
+		{grids.Direction{1, 0}, grids.Direction{0, 1}}:   'L',
+		{grids.Direction{1, 0}, grids.Direction{0, -1}}:  'J',
+		{grids.Direction{-1, 0}, grids.Direction{0, -1}}: '7',
 	}
 
 	grid := grids.NewWithFill(maxI-minI+1, maxJ-minJ+1, '.')
@@ -60,8 +94,20 @@ func run(part2 bool, input string) any {
 		coord.i -= minI
 		coord.j -= minJ
 		grid[coord.i][coord.j] = '#'
+
+		if coord.prevDir != nil {
+			fmt.Printf("Changing direction from %v to %v\n", coord.prevDir, coord.nextDir)
+			dc := DirectionChange{*coord.prevDir, *coord.nextDir}
+			if sym, ok := cornerSymbols[dc]; ok {
+				grid[coord.i][coord.j] = sym
+			}
+			if sym, ok := cornerSymbols[dc.Reverse()]; ok {
+				grid[coord.i][coord.j] = sym
+			}
+		}
 	}
-	markInterior(grid)
+	//markInterior(grid)
+	fmt.Println(grid)
 
 	totalArea := (maxI - minI + 1) * (maxJ - minJ + 1)
 	for _, row := range grid {
