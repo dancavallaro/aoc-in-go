@@ -9,7 +9,7 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/18/input-user.txt", false)
+	util.Run(run, "2023/18/input-example.txt", true)
 }
 
 type Coord struct {
@@ -21,16 +21,16 @@ func (c Coord) Move(direction grids.Direction, distance int) Coord {
 }
 
 var Directions = map[string]grids.Direction{
-	"U": grids.North,
-	"R": grids.East,
-	"D": grids.South,
-	"L": grids.West,
+	"3": grids.North,
+	"0": grids.East,
+	"1": grids.South,
+	"2": grids.West,
 }
 
-var digPlanEntryRegex = regexp.MustCompile("([A-Z]) ([0-9]+) .+")
+var digPlanEntryRegex = regexp.MustCompile("#([0-9a-f]{5})([0-9a-f])")
 
 func run(part2 bool, input string) any {
-	if part2 {
+	if !part2 {
 		return "not implemented"
 	}
 
@@ -39,19 +39,19 @@ func run(part2 bool, input string) any {
 	maxI, maxJ, minI, minJ := 0, 0, 0, 0
 	for _, line := range util.Lines(input) {
 		digPlanParts := digPlanEntryRegex.FindStringSubmatch(line)
-		directionStr, distanceStr := digPlanParts[1], digPlanParts[2]
+		distanceStr, directionStr := digPlanParts[1], digPlanParts[2]
 		direction := Directions[directionStr]
-		distance, err := strconv.Atoi(distanceStr)
+		distance, err := strconv.ParseInt(distanceStr, 16, 0)
 		if err != nil {
 			panic(err)
 		}
 
-		for delta := 1; delta <= distance; delta++ {
+		for delta := 1; delta <= int(distance); delta++ {
 			nextCoord := currCoord.Move(direction, delta)
 			pathCoords = append(pathCoords, nextCoord)
 		}
 
-		currCoord = currCoord.Move(direction, distance)
+		currCoord = currCoord.Move(direction, int(distance))
 		maxI, maxJ, minI, minJ = max(maxI, currCoord.i), max(maxJ, currCoord.j), min(minI, currCoord.i), min(minJ, currCoord.j)
 	}
 
