@@ -165,14 +165,17 @@ func run(part2 bool, input string) any {
 func countCrossings(start Coord, normal grids.Direction, validCoords map[Coord]Coord, grid grids.Grid) int {
 	crossings := 0
 	var crossedCorner *rune
-	for delta := 1; delta <= 10; delta++ { // TODO: 10 -> 1000000
+	for delta := 1; delta <= 1000; delta++ { // TODO: -> 1000000
 		nextPoint := start.Move(normal, delta)
 		var ok bool
 		var nextCoord Coord
 		if nextCoord, ok = validCoords[Coord{nextPoint.i, nextPoint.j, nil, nil}]; !ok {
-			continue
+			//continue
+			// TODO: even after commenting that continue out, for some reason it's still not finding anything other than '.' cells below
 		}
 		char := grid[nextCoord.i][nextCoord.j]
+		charStr := string(char)
+		fmt.Println(charStr)
 
 		if char == '|' {
 			crossings++
