@@ -99,11 +99,6 @@ func run(part2 bool, input string) any {
 		{grids.Direction{-1, 0}, grids.Direction{0, -1}}: '7',
 	}
 
-	// TODO: then find the midpoint between the first two vertices
-	// TODO: then find the line perpindicular to that
-	// TODO: then go in both directions, and figure out which side is the outside
-	// TODO: then circumnavigate the path, recording the vertices of the real exterior boundary
-
 	grid := grids.NewWithFill(maxI-minI+1, maxJ-minJ+1, '.')
 	for _, coord := range pathCoords {
 		coord.i -= minI
@@ -123,6 +118,11 @@ func run(part2 bool, input string) any {
 	}
 	//markInterior(grid)
 	fmt.Println(grid)
+
+	// TODO: then find the midpoint between the first two vertices
+	// TODO: then find the line perpendicular to that
+	// TODO: then go in both directions, and figure out which side is the outside
+	// TODO: then circumnavigate the path, recording the vertices of the real exterior boundary
 
 	totalArea := (maxI - minI + 1) * (maxJ - minJ + 1)
 	for _, row := range grid {
