@@ -54,12 +54,16 @@ func run(part2 bool, input string) any {
 
 	currCoord := Coord{0, 0, nil, nil}
 	var pathCoords []Coord
-	var lastDirection *grids.Direction
+	var firstDirection, lastDirection *grids.Direction
 	maxI, maxJ, minI, minJ := 0, 0, 0, 0
 	for _, line := range util.Lines(input) {
 		digPlanParts := digPlanEntryRegex.FindStringSubmatch(line)
 		directionStr, distanceStr := digPlanParts[1], digPlanParts[2]
 		direction := Directions[directionStr]
+
+		if firstDirection == nil {
+			firstDirection = &direction
+		}
 
 		if lastDirection != nil {
 			//fmt.Printf("Changing direction from %v to %v\n", *lastDirection, direction)
@@ -74,6 +78,12 @@ func run(part2 bool, input string) any {
 
 		for delta := 1; delta <= distance; delta++ {
 			nextCoord := currCoord.Move(direction, delta)
+
+			if nextCoord.i == 0 && nextCoord.j == 0 {
+				nextCoord.prevDir = &direction
+				nextCoord.nextDir = firstDirection
+			}
+
 			pathCoords = append(pathCoords, nextCoord)
 		}
 
@@ -89,7 +99,6 @@ func run(part2 bool, input string) any {
 		{grids.Direction{-1, 0}, grids.Direction{0, -1}}: '7',
 	}
 
-	// TODO: the origin corner isn't correctly marked, fix that
 	// TODO: then find the midpoint between the first two vertices
 	// TODO: then find the line perpindicular to that
 	// TODO: then go in both directions, and figure out which side is the outside
