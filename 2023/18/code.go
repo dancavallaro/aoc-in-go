@@ -83,6 +83,9 @@ func run(part2 bool, input string) any {
 				nextCoord.prevDir = &direction
 				nextCoord.nextDir = firstDirection
 			}
+			if delta < distance {
+				nextCoord.nextDir = &direction
+			}
 
 			pathCoords = append(pathCoords, nextCoord)
 		}
@@ -103,18 +106,26 @@ func run(part2 bool, input string) any {
 	for _, coord := range pathCoords {
 		coord.i -= minI
 		coord.j -= minJ
-		grid[coord.i][coord.j] = '#'
+		fillChar := '#'
 
-		if coord.prevDir != nil {
+		if coord.prevDir != nil && coord.nextDir != nil {
 			fmt.Printf("Changing direction from %v to %v\n", coord.prevDir, coord.nextDir)
 			dc := DirectionChange{*coord.prevDir, *coord.nextDir}
 			if sym, ok := cornerSymbols[dc]; ok {
-				grid[coord.i][coord.j] = sym
+				fillChar = sym
 			}
 			if sym, ok := cornerSymbols[dc.Reverse()]; ok {
-				grid[coord.i][coord.j] = sym
+				fillChar = sym
+			}
+		} else if coord.nextDir != nil {
+			if coord.nextDir.DeltaI == 0 {
+				fillChar = '-'
+			} else {
+				fillChar = '|'
 			}
 		}
+
+		grid[coord.i][coord.j] = fillChar
 	}
 	//markInterior(grid)
 	fmt.Println(grid)
