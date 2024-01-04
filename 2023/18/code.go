@@ -18,6 +18,12 @@ type Coord struct {
 	prevDir, nextDir *grids.Direction
 }
 
+func (c Coord) Midpoint(c2 Coord) Coord {
+	i := (c.i + c2.i) / 2
+	j := (c.j + c2.j) / 2
+	return Coord{i, j, nil, c.nextDir}
+}
+
 func (c Coord) Move(direction grids.Direction, distance int) Coord {
 	return Coord{c.i + distance*direction.DeltaI, c.j + distance*direction.DeltaJ, nil, nil}
 }
@@ -102,6 +108,7 @@ func run(part2 bool, input string) any {
 		{grids.Direction{-1, 0}, grids.Direction{0, -1}}: '7',
 	}
 
+	var cornerCoords []Coord
 	grid := grids.NewWithFill(maxI-minI+1, maxJ-minJ+1, '.')
 	for _, coord := range pathCoords {
 		coord.i -= minI
@@ -109,6 +116,7 @@ func run(part2 bool, input string) any {
 		fillChar := '#'
 
 		if coord.prevDir != nil && coord.nextDir != nil {
+			cornerCoords = append(cornerCoords, coord)
 			fmt.Printf("Changing direction from %v to %v\n", coord.prevDir, coord.nextDir)
 			dc := DirectionChange{*coord.prevDir, *coord.nextDir}
 			if sym, ok := cornerSymbols[dc]; ok {
@@ -129,7 +137,9 @@ func run(part2 bool, input string) any {
 	}
 	fmt.Println(grid)
 
-	// TODO: then find the midpoint between the first two vertices
+	midpoint := cornerCoords[0].Midpoint(cornerCoords[1])
+	fmt.Println(midpoint)
+
 	// TODO: then find the line perpendicular to that
 	// TODO: then go in both directions, and figure out which side is the outside
 	// TODO: then circumnavigate the path, recording the vertices of the real exterior boundary
