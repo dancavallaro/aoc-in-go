@@ -18,6 +18,10 @@ type Coord struct {
 	prevDir, nextDir *grids.Direction
 }
 
+func (c Coord) String() string {
+	return fmt.Sprintf("[%d, %d %v %v]", c.i, c.j, c.prevDir, c.nextDir)
+}
+
 func (c Coord) Midpoint(c2 Coord) Coord {
 	i := (c.i + c2.i) / 2
 	j := (c.j + c2.j) / 2
@@ -139,8 +143,9 @@ func run(part2 bool, input string) any {
 
 	midpoint := cornerCoords[0].Midpoint(cornerCoords[1])
 	fmt.Println(midpoint)
+	normal, invNormal := midpoint.nextDir.Left(), midpoint.nextDir.Right()
+	fmt.Println(normal, invNormal)
 
-	// TODO: then find the line perpendicular to that
 	// TODO: then go in both directions, and figure out which side is the outside
 	// TODO: then circumnavigate the path, recording the vertices of the real exterior boundary
 
