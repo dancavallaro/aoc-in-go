@@ -10,7 +10,7 @@ import (
 
 func main() {
 	//aoc.Harness(run)
-	util.Run(run, "2023/18/input-example.txt", false)
+	util.Run(run, "2023/18/input-user.txt", false)
 }
 
 type Coord struct {
@@ -113,8 +113,10 @@ func run(part2 bool, input string) any {
 	}
 
 	var cornerCoords []Coord
+	validCoords := map[Coord]Coord{}
 	grid := grids.NewWithFill(maxI-minI+1, maxJ-minJ+1, '.')
 	for _, coord := range pathCoords {
+		validCoords[Coord{coord.i, coord.j, nil, nil}] = coord
 		coord.i -= minI
 		coord.j -= minJ
 		fillChar := '#'
@@ -141,13 +143,49 @@ func run(part2 bool, input string) any {
 	}
 	fmt.Println(grid)
 
-	midpoint := cornerCoords[0].Midpoint(cornerCoords[1])
-	fmt.Println(midpoint)
-	normal, invNormal := midpoint.nextDir.Left(), midpoint.nextDir.Right()
-	fmt.Println(normal, invNormal)
+	for i := 0; i < len(cornerCoords)-1; i++ {
+		// Find a horizontal normal because I'm lazy
+		midpoint := cornerCoords[i].Midpoint(cornerCoords[i+1])
+		fmt.Println(midpoint)
+		normal, invNormal := midpoint.nextDir.Left(), midpoint.nextDir.Right()
+		fmt.Println(normal, invNormal)
+		if normal.DeltaI != 0 {
+			continue
+		}
+		fmt.Println(countCrossings(midpoint, normal, validCoords, grid), countCrossings(midpoint, invNormal, validCoords, grid))
+		break
+	}
 
 	// TODO: then go in both directions, and figure out which side is the outside
 	// TODO: then circumnavigate the path, recording the vertices of the real exterior boundary
 
 	return 42
+}
+
+func countCrossings(start Coord, normal grids.Direction, validCoords map[Coord]Coord, grid grids.Grid) int {
+	crossings := 0
+	var crossedCorner *rune
+	for delta := 1; delta <= 10; delta++ { // TODO: 10 -> 1000000
+		nextPoint := start.Move(normal, delta)
+		var ok bool
+		var nextCoord Coord
+		if nextCoord, ok = validCoords[Coord{nextPoint.i, nextPoint.j, nil, nil}]; !ok {
+			continue
+		}
+		char := grid[nextCoord.i][nextCoord.j]
+
+		if char == '|' {
+			crossings++
+		} else if char != '-' {
+			if crossedCorner == nil {
+				crossedCorner = &char
+			} else {
+				if (*crossedCorner == 'L' && char == '7') || (*crossedCorner == '7' && char == 'L') || (*crossedCorner == 'F' && char == 'J') || (*crossedCorner == 'J' && char == 'F') {
+					crossings++
+					crossedCorner = nil
+				}
+			}
+		}
+	}
+	return crossings
 }
