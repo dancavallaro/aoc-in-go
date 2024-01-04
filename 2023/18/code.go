@@ -127,7 +127,6 @@ func run(part2 bool, input string) any {
 
 		grid[coord.i][coord.j] = fillChar
 	}
-	//markInterior(grid)
 	fmt.Println(grid)
 
 	// TODO: then find the midpoint between the first two vertices
@@ -135,40 +134,5 @@ func run(part2 bool, input string) any {
 	// TODO: then go in both directions, and figure out which side is the outside
 	// TODO: then circumnavigate the path, recording the vertices of the real exterior boundary
 
-	totalArea := (maxI - minI + 1) * (maxJ - minJ + 1)
-	for _, row := range grid {
-		for _, cell := range row {
-			if cell == '*' {
-				totalArea--
-			}
-		}
-	}
-	return totalArea
-}
-
-func markInterior(grid grids.Grid) {
-	for i := range grid {
-		floodFill(grid, i, 0)
-		floodFill(grid, i, len(grid[i])-1)
-	}
-	for j := range grid[0] {
-		floodFill(grid, 0, j)
-		floodFill(grid, len(grid)-1, j)
-	}
-}
-
-func floodFill(grid grids.Grid, i, j int) {
-	if i < 0 || j < 0 || i >= len(grid) || j >= len(grid[0]) {
-		return
-	}
-	if grid[i][j] != '.' {
-		return
-	}
-
-	grid[i][j] = '*'
-
-	floodFill(grid, i, j+1)
-	floodFill(grid, i+1, j)
-	floodFill(grid, i, j-1)
-	floodFill(grid, i-1, j)
+	return 42
 }
